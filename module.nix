@@ -1,10 +1,12 @@
 { config, lib, pkgs, ... }:
 
 let
+    cfg = config.programs.flex-launcher;
+
     # One "EntryN=title;icon;command" line per menu entry
     entries = lib.concatStringsSep "\n" (lib.imap1
         (i: e: "Entry${toString i}=${e.title};${e.icon};${e.command}")
-        config.tv.entries);
+        cfg.entries);
 
     # Launcher config, written to the Nix store
     launcherConfig = pkgs.writeText "flex-launcher.ini" ''
@@ -17,15 +19,14 @@ let
         [Gamepad]
         Enabled=true
     '';
+
+    package = pkgs.writeShellScriptBin "flex-launcher" ''
+        exec ${pkgs.flex-launcher}/bin/flex-launcher -c ${launcherConfig} "$@"
+    '';
 in
 {
-    options.tv = {
-        enable = lib.mkEnableOption "the TV kiosk session (Flex Launcher in cage)";
-
-        user = lib.mkOption {
-            type = lib.types.str;
-            description = "User the TV session runs as.";
-        };
+    options.programs.flex-launcher = {
+        enable = lib.mkEnableOption "Flex Launcher";
 
         entries = lib.mkOption {
             type = lib.types.listOf (lib.types.submodule {
@@ -40,11 +41,7 @@ in
         };
     };
 
-    config = lib.mkIf config.tv.enable {
-        services.cage = {
-            enable = true;
-            program = "${pkgs.flex-launcher}/bin/flex-launcher -c ${launcherConfig}";
-            user = config.tv.user;
-        };
+    config = lib.mkIf cfg.enable {
+        environment.systemPackages = [ package ];
     };
 }

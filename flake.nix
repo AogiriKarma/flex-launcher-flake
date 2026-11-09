@@ -1,5 +1,5 @@
 {
-    description = "NixOS module: TV kiosk session running Flex Launcher in cage";
+    description = "NixOS module to configure Flex Launcher declaratively";
 
     outputs = { self }: {
         nixosModules.default = import ./module.nix;
