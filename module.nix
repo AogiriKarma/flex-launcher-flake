@@ -8,6 +8,11 @@ let
         (i: e: "Entry${toString i}=${e.title};${e.icon};${e.command}")
         cfg.entries);
 
+    # One "Button=action" line per gamepad control
+    gamepadControls = lib.concatStringsSep "\n" (lib.mapAttrsToList
+        (button: action: "${button}=${action}")
+        cfg.gamepad.controls);
+
     # Launcher config, written to the Nix store
     launcherConfig = pkgs.writeText "flex-launcher.ini" ''
         [General]
@@ -17,7 +22,8 @@ let
         ${entries}
 
         [Gamepad]
-        Enabled=true
+        Enabled=${lib.boolToString cfg.gamepad.enable}
+        ${gamepadControls}
     '';
 
     package = pkgs.writeShellScriptBin "flex-launcher" ''
@@ -38,6 +44,31 @@ in
             });
             default = [ ];
             description = "Main menu entries, in display order.";
+        };
+
+        gamepad = {
+            enable = lib.mkOption {
+                type = lib.types.bool;
+                default = true;
+                description = "Whether the launcher can be driven with a gamepad.";
+            };
+
+            controls = lib.mkOption {
+                type = lib.types.attrsOf lib.types.str;
+                # Same as the example config shipped with Flex Launcher
+                default = {
+                    "LStickX-" = ":left";
+                    "LStickX+" = ":right";
+                    ButtonA = ":select";
+                    ButtonB = ":back";
+                    ButtonDPadLeft = ":left";
+                    ButtonDPadRight = ":right";
+                };
+                description = ''
+                    Gamepad controls, button or axis name to command (usually a special
+                    command such as :select or :back). Setting it replaces the defaults.
+                '';
+            };
         };
     };
 

@@ -32,3 +32,9 @@ inputs.flex-launcher-flake.url = "github:AogiriKarma/flex-launcher-flake";
 - `programs.flex-launcher.entries`: main menu entries (`title`, `icon`,
   `command`), in order. `command` can be a program, a `.desktop` file or a
   Flex Launcher special command such as `:restart` or `:shutdown`
+- `programs.flex-launcher.gamepad.enable`: drive the launcher with a gamepad
+  (default `true`)
+- `programs.flex-launcher.gamepad.controls`: button or axis name to command,
+  e.g. `{ ButtonA = ":select"; ButtonB = ":back"; }`. Defaults to the controls
+  of Flex Launcher's example config (left stick and D-pad to move, A to select,
+  B to go back); setting it replaces them
