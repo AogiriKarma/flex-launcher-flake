@@ -18,6 +18,9 @@ let
         [General]
         DefaultMenu=Main
 
+        [Layout]
+        MaxButtons=${toString cfg.maxButtons}
+
         [Main]
         ${entries}
 
@@ -44,6 +47,12 @@ in
             });
             default = [ ];
             description = "Main menu entries, in display order.";
+        };
+
+        maxButtons = lib.mkOption {
+            type = lib.types.ints.positive;
+            default = 4;
+            description = "Buttons per page; the other entries go to the next pages.";
         };
 
         gamepad = {
