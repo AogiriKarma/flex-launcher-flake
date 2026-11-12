@@ -3,10 +3,24 @@
 let
     cfg = config.programs.flex-launcher;
 
+    # One menu entry: what the button shows and what it runs
+    entryType = lib.types.submodule {
+        options = {
+            title = lib.mkOption { type = lib.types.str; };
+            icon = lib.mkOption { type = lib.types.path; };
+            command = lib.mkOption { type = lib.types.str; };
+        };
+    };
+
     # One "EntryN=title;icon;command" line per menu entry
-    entries = lib.concatStringsSep "\n" (lib.imap1
+    menuEntries = list: lib.concatStringsSep "\n" (lib.imap1
         (i: e: "Entry${toString i}=${e.title};${e.icon};${e.command}")
-        cfg.entries);
+        list);
+
+    # One [Name] section per submenu, opened by an entry with ":submenu Name"
+    submenus = lib.concatStringsSep "\n\n" (lib.mapAttrsToList
+        (name: list: "[${name}]\n${menuEntries list}")
+        cfg.submenus);
 
     # One "Button=action" line per gamepad control
     gamepadControls = lib.concatStringsSep "\n" (lib.mapAttrsToList
@@ -22,7 +36,9 @@ let
         MaxButtons=${toString cfg.maxButtons}
 
         [Main]
-        ${entries}
+        ${menuEntries cfg.entries}
+
+        ${submenus}
 
         [Gamepad]
         Enabled=${lib.boolToString cfg.gamepad.enable}
@@ -38,15 +54,25 @@ in
         enable = lib.mkEnableOption "Flex Launcher";
 
         entries = lib.mkOption {
-            type = lib.types.listOf (lib.types.submodule {
-                options = {
-                    title = lib.mkOption { type = lib.types.str; };
-                    icon = lib.mkOption { type = lib.types.path; };
-                    command = lib.mkOption { type = lib.types.str; };
-                };
-            });
+            type = lib.types.listOf entryType;
             default = [ ];
             description = "Main menu entries, in display order.";
+        };
+
+        submenus = lib.mkOption {
+            type = lib.types.attrsOf (lib.types.listOf entryType);
+            default = { };
+            example = lib.literalExpression ''
+                {
+                    Consoles = [
+                        { title = "Switch"; icon = ./switch.png; command = "console 2"; }
+                    ];
+                }
+            '';
+            description = ''
+                Submenus, by name, each with its entries in display order. An entry
+                with the command ":submenu Name" opens one, the back button closes it.
+            '';
         };
 
         maxButtons = lib.mkOption {
